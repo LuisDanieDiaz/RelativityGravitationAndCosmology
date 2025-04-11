@@ -1,6 +1,47 @@
 import matplotlib.pyplot as plt
 import numpy as np
 
+class Frame_2D:
+    def __init__(self, figsize:tuple=(6,6), title:str='', show_title:bool=True):
+        """
+        Create a 2D figure with a specific size and remove the background.
+        @param figsize: Tuple with the size of the figure.
+        @param title: Title of the figure.
+        @param shoe_title: Show the title of the figure.
+        """
+        self.title = title
+        self.show_title = show_title
+
+        self.fig, self.ax = plt.subplots(figsize=figsize)
+        
+        self.quit_background()
+
+        # Limit of the axes
+        self.ax.set_xlim([0, 2.5])
+        self.ax.set_ylim([0, 2.5])
+        self.ax.set_aspect('equal', adjustable='box')
+
+        # Quit the grid and ticks
+        self.ax.grid(False)
+        self.ax.set_xticks([])
+        self.ax.set_yticks([])
+
+        # title
+        if self.show_title: self.ax.set_title(self.title, fontsize=16)
+
+    def quit_background(self):
+        """
+        Remove the background of the figure.
+        """
+        # Remove the background color
+        self.ax.set_facecolor('white')
+        self.ax.spines['top'].set_visible(False)
+        self.ax.spines['right'].set_visible(False)
+        self.ax.spines['left'].set_visible(False)
+        self.ax.spines['bottom'].set_visible(False)
+        
+        
+
 class Frame_3D:
     def __init__(self, figsize:tuple=(6,6), title:str='', show_title:bool=True):
         """
@@ -28,7 +69,7 @@ class Frame_3D:
         self.ax.set_yticks([])
         self.ax.set_zticks([])
 
-        # arial
+        # title
         if self.show_title: self.ax.set_title(self.title, fontsize=16)
 
     def quit_background(self):
