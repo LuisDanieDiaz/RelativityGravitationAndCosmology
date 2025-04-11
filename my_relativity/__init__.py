@@ -4,7 +4,7 @@
 from . import plots
 
 # import *
-__all__ = ['plots']
+__all__ = ['plots', 'newton']
 
 # Package information
 __version__ = '0.1.0'
