@@ -2,6 +2,7 @@
 
 # Importar funciones/clases específicas de tus submódulos
 from . import plots
+from . import newton
 
 # import *
 __all__ = ['plots', 'newton']
