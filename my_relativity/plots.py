@@ -72,7 +72,7 @@ class Frame_3D:
         Create a 3D figure with a specific size and remove the background.
         @param figsize: Tuple with the size of the figure.
         @param title: Title of the figure.
-        @param shoe_title: Show the title of the figure.
+        @param show_title: Show the title of the figure.
         """
         self.title = title
         self.show_title = show_title
