@@ -1,4 +1,5 @@
 import numpy as np
+import numbers
 
 class Force:
     def __init__(self, function=lambda mass, r, v: np.array([0,0,0])):
@@ -24,7 +25,7 @@ class Force:
         return Force(lambda mass, r, v: self.apply(mass, r, v) + other.apply(mass, r, v))
     
 class Particle:
-    def __init__(self, mass=0, r0=[0,0,0], v0=[0,0,0]):
+    def __init__(self, mass=0., r0=[0,0,0], v0=[0,0,0]):
         """
         Initialize a Particle object with mass, initial position, and initial velocity.
         @param mass: Mass of the particle.
@@ -64,4 +65,19 @@ class Particle:
         self.v0 = v_half + 0.5 * a1 * dt
 
         
-    
+def galilean_transformation(r0, v0, t, inverse=False):
+    """
+    Galilean transformation.
+    @param r0: Initial position.
+    @param v0: Velocity.
+    @param t: Time.
+    """
+
+    if not isinstance(t, numbers.Number):
+        t = t[:, np.newaxis] 
+
+    if inverse:
+        return r0 + v0*t
+    else:
+        rs_prime = r0 - v0*t
+        return rs_prime
