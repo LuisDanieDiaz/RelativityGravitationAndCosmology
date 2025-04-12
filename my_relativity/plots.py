@@ -3,7 +3,7 @@ from matplotlib.patches import FancyArrow
 from matplotlib.offsetbox import OffsetImage, AnnotationBbox
 from scipy.ndimage import rotate
 import numpy as np
-from newton import Particle
+from .newton import Particle
 
 def get_r0_2D(r0, axis):
     if axis == 'xy':
