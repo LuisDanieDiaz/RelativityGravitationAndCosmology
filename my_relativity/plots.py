@@ -214,32 +214,29 @@ class Coordinate_system_2D(Particle):
         self.show_name_axis()
         self.show_name_coordinate_system()
     
-    def drawn_grid(self, xlims=(-2.5, 2.5), ylims=(-2.5, 2.5), alpha=0.3, space=0.5):
+    def drawn_grid(self, alpha=0.3, space=0.5):
         """
         Draw the coordinate system in the frame.
         """
         # axis
-        r0_2D = get_r0_2D(self.r0, self.axis)
-
-        side_x = xlims[1] - xlims[0]
-        side_y = ylims[1] - ylims[0]
-
-        for i in np.arange(r0_2D[0] - side_x, r0_2D[0] + side_x, space*self.size):
-            self.frame.ax.plot([i, i], [ylims[0] - side_y, ylims[1] + side_y], color='k', alpha=alpha, lw=0.5)
+        for i in np.arange(self.frame.xlims[0], self.frame.xlims[1], space*self.size):
+            # self.frame.ax.plot([i, i], [ylims[0] - side_y, ylims[1] + side_y], color='k', alpha=alpha, lw=0.5)
+            self.frame.ax.plot([i, i], [self.frame.ylims[0], self.frame.ylims[1]], color='k', alpha=alpha, lw=0.5)
             self.frame.ax.plot([i, i], [-self.size/16, self.size/16], color='k', alpha=alpha, lw=0.5)
             # number
             self.frame.ax.text(i, -self.size/16, str(round(i, 2)), color='k', alpha=alpha, fontsize=8, ha='center', va='top')
 
 
-        for i in np.arange(r0_2D[1] - side_y, r0_2D[1] + side_y, space*self.size):
-            self.frame.ax.plot([xlims[0] - side_x, xlims[1] + side_x], [i, i], color='k', alpha=alpha, lw=0.5)
+        for i in np.arange(self.frame.ylims[0], self.frame.ylims[1], space*self.size):
+            # self.frame.ax.plot([self.frame.xlims[0] - side_x, self.frame.xlims[1] + side_x], [i, i], color='k', alpha=alpha, lw=0.5)
+            self.frame.ax.plot([self.frame.xlims[0], self.frame.xlims[1]], [i, i], color='k', alpha=alpha, lw=0.5)
             self.frame.ax.plot([-self.size/16, self.size/16], [i, i], color='k', alpha=alpha, lw=0.5)
             # number
             self.frame.ax.text(-self.size/16, i, str(round(i, 2)), color='k', alpha=alpha, fontsize=8, ha='right', va='center')
 
         # black lines in the main
-        self.frame.ax.plot([xlims[0] - side_x, xlims[1] + side_x], [0, 0], color='k', alpha=alpha, lw=1.5)
-        self.frame.ax.plot([0, 0], [ylims[0]-side_y, ylims[1] + side_y], color='k', alpha=alpha, lw=1.5)
+        self.frame.ax.plot([self.frame.xlims[0], self.frame.xlims[1]], [0, 0], color='k', alpha=alpha, lw=1.5)
+        self.frame.ax.plot([0, 0], [self.frame.ylims[0], self.frame.ylims[1]], color='k', alpha=alpha, lw=1.5)
 
             
 
