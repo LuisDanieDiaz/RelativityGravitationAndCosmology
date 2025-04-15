@@ -119,6 +119,7 @@ class Preloaded_Images:
         image_name = f'{name}.png'
         try:
             image_file = resources.files(images).joinpath(self.type).joinpath(image_name)
+            print(image_file)
             return Body_2D(image_path=str(image_file), **kwargs)
         except FileNotFoundError:
             raise FileNotFoundError(f"Image {image_name} not found in images/{self.type}/.")
