@@ -16,6 +16,14 @@ class Force:
         """
         return self.function(mass, r, v)
     
+    def apply_to_particles(self, *particles):
+        """
+        Apply the force to a list of particles.
+        @param particles: A list of Particle objects.
+        """
+        for particle in particles:
+            particle.add_force(self)
+    
     def __add__(self, other):
         """
         Add two Force objects together.
