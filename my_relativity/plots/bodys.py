@@ -6,6 +6,8 @@ from .frames import get_r0_2D, get_r0_2D_vec
 from ..newton import *
 from . import images
 from scipy.ndimage import zoom as zoom_
+from matplotlib.patches import Wedge
+from matplotlib import font_manager
 
 class Image_2D:
     def __init__(self, image_path:str, r0=[0,0], zoom=0.1, alpha=1, axis='xy', angle=0, origin='cc'):
@@ -182,4 +184,53 @@ class Preloaded_Images:
 
 
 
+class Clock:
+    def __init__(self, r0=[0,0,0], time=0, zoom=0.15, units=['s', 60], zoom_text=0, position_text=[0,-1,0]):
+        """
+        @param time: time in any units
+        @param zoom: zoom factor for the clock
+        @param units: ['s', 60] units for the clock, and the number of units in each step
+        @param zoom_text: zoom factor for the text
+        """
+        self.time = time
+        self.zoom = zoom
+        self.units = units
+        self.zoom_text = zoom_text
+        if zoom_text == 0:
+            self.zoom_text = zoom
+        self.position_text = np.array(position_text) * self.zoom_text
+
+
+        preload = Preloaded_Images()
+        self.clock = preload.get_image('clock', zoom=zoom, r0=r0)
+        self.clock_hand = preload.get_image('clock_hand', zoom=zoom, r0=r0)
+        self.shelf = preload.get_image('paper_shelf_gray', zoom=self.zoom_text, r0=self.position_text + r0)
+        self.r0 = np.array(r0)
+
+        titan_path = "TitanOne-Regular.ttf"  # ruta al archivo .ttf
+        self.titan_font = font_manager.FontProperties(fname=titan_path)
+
+
+    def drawn(self, S, zorder=-1, color='r', t='t', axis='xy'):
+        hour = -self.time * 360/self.units[1]  # Convert to degrees
+
+        r0 = self.r0 + S.r0
+        r0_2D = get_r0_2D(r0, axis)
+
+        self.clock.drawn(S, zorder=2 + zorder)
         
+        r0_display = S.ax.transData.transform(r0_2D)  # de data a display (pixeles)
+        wedge = Wedge(r0_display, 200*self.zoom, theta1=90 + hour, theta2=90,
+                    facecolor=color, alpha=0.5, zorder=3 + zorder)
+        wedge.set_transform(S.ax.transData.inverted() + S.ax.transData)
+
+        self.clock_hand.drawn(S, zorder=4 + zorder, angle=hour)
+        self.shelf.drawn(S, zorder=5 + zorder)
+        S.ax.add_patch(wedge)
+
+        
+
+        r0_text = self.position_text + r0
+        r0_2D_text = get_r0_2D(r0_text, axis)
+
+        S.ax.text(*r0_2D_text, f"{t} = {self.time:.2f} {self.units[0]}", fontsize=14 * self.zoom_text/0.2, fontproperties=self.titan_font, ha='center', va='center', color=(1,1,1,0.8), zorder=5 + zorder, family='monospace')
