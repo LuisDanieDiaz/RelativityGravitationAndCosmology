@@ -8,7 +8,7 @@ from . import images
 from scipy.ndimage import zoom as zoom_
 
 class Image_2D:
-    def __init__(self, image_path:str, r0=[0,0], zoom=0.1, alpha=1, axis='xy', angle=0):
+    def __init__(self, image_path:str, r0=[0,0], zoom=0.1, alpha=1, axis='xy', angle=0, origin='cc'):
         """
         Create a 2D image.
         @param image_path: Path of the image.
@@ -21,6 +21,7 @@ class Image_2D:
         self.alpha = alpha
         self.axis = axis
         self.angle = angle
+        self.origin = origin
 
         self.img = matplotlib.image.imread(self.image_path)
         if angle != 0:
@@ -32,8 +33,9 @@ class Image_2D:
             self.zoom = 0.5
 
         self.artist = None
-        self.imgBox = None
         self.rotate_images = {}
+
+        self.img_original = self.img.copy()
 
     def rotate_image(self, angle):
         """
@@ -47,39 +49,72 @@ class Image_2D:
     def drawn(self, frame, zorder=-1, angle=0):
         """
         Draw the image in the frame, rotated by a given angle.
+        
         @param frame: Frame_2D object where the image will be drawn.
         @param zorder: Z-order of the image.
         @param angle: Angle in degrees.
+        @param origin: Position origin: 
+                    - First char: 'c' (center), 't' (top), 'b' (bottom)
+                    - Second char: 'c' (center), 'l' (left), 'r' (right)
+                    e.g. 'cc' (center-center), 'tl' (top-left), 'br' (bottom-right)
         """
         r0_2D = get_r0_2D(self.r0 + frame.r0, self.axis)
-
+        
         img_rotated = self.rotate_images.get(angle)
         if img_rotated is None:
             img_rotated = rotate(self.img, angle, reshape=True)
             self.rotate_images[angle] = img_rotated
-
         else:
             pass
-
-
-        # Recortar al rango permitido (float en [0, 1], o int en [0, 255])
+        
+        # Clip to allowed range (float in [0, 1], or int in [0, 255])
         if img_rotated.dtype == np.uint8:
             img_rotated = np.clip(img_rotated, 0, 255)
         else:
             img_rotated = np.clip(img_rotated, 0.0, 1.0)
-
+        
         imgBox = OffsetImage(img_rotated, zoom=self.zoom, alpha=self.alpha)
-
+        
+        # Map the origin code to box_alignment tuple
+        alignment_map = {
+            'tl': (0, 1),  # top-left
+            'tc': (0.5, 1),  # top-center
+            'tr': (1, 1),  # top-right
+            'cl': (0, 0.5),  # center-left
+            'cc': (0.5, 0.5),  # center-center (default)
+            'cr': (1, 0.5),  # center-right
+            'bl': (0, 0),  # bottom-left
+            'bc': (0.5, 0),  # bottom-center
+            'br': (1, 0)   # bottom-right
+        }
+        
+        # Use default if origin is not in the map
+        box_align = alignment_map.get(self.origin, (0.5, 0.5))
+        
         self.artist = AnnotationBbox(
-            imgBox, (r0_2D[0], r0_2D[1]), frameon=False, pad=0.0
+            imgBox, (r0_2D[0], r0_2D[1]), 
+            frameon=False, pad=0.0,
+            box_alignment=box_align,
+            clip_on=True
         )
+        
         self.artist.set_zorder(zorder)
-
+        self.artist.set_clip_on(True) 
+        
         frame.ax.add_artist(self.artist)
+        
+    def resize(self, xside=1, yside=1):
+        """
+        Resize the body.
+        @param xside: Side of the body in x direction.
+        @param yside: Side of the body in y direction.
+        """
+        self.img = zoom_(self.img_original, (yside, xside, 1))
+        self.rotate_images = {}
 
 
 class Body_2D(Particle, Image_2D):
-    def __init__(self, image_path:str, mass=1, r0=[0,0,0], v0=[0,0,0], zoom=0.1, alpha=1, axis='xy', angle=0):
+    def __init__(self, image_path:str, mass=1, r0=[0,0,0], v0=[0,0,0], zoom=0.1, alpha=1, axis='xy', angle=0, origin='cc'):
         """
         Create a body with a mass, position and velocity.
         @param mass: Mass of the body.
@@ -91,7 +126,7 @@ class Body_2D(Particle, Image_2D):
         """
             
         Particle.__init__(self, mass=mass, r0=r0, v0=v0)
-        Image_2D.__init__(self, image_path=image_path, r0=r0, zoom=zoom, alpha=alpha, axis=axis, angle=angle)
+        Image_2D.__init__(self, image_path=image_path, r0=r0, zoom=zoom, alpha=alpha, axis=axis, angle=angle, origin=origin)
 
         self.times = np.zeros(0)
         self.rs = np.zeros((0, 3))
@@ -122,6 +157,7 @@ class Body_2D(Particle, Image_2D):
 
         # Draw the path
         coordinate_system.ax.plot(r0_new_2D[:, 0], r0_new_2D[:, 1], color='blue', alpha=0.5, zorder=-1)
+
 
 class Preloaded_Images:
     """

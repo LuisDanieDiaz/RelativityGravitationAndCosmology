@@ -33,7 +33,7 @@ def get_r0_2D_vec(r0, axis):
     return r0_2D
 
 
-def plot_line_between_2_events(ax, event1, event2, color='k', alpha=0.5, axis='tx'):
+def plot_line_between_2_events(ax, event1, event2, color='k', alpha=0.5, axis='tx', lw=0.5, **kwargs):
     """
     Plot a line between two events in the frame.
     @param frame: Frame_2D object where the line will be drawn.
@@ -47,7 +47,7 @@ def plot_line_between_2_events(ax, event1, event2, color='k', alpha=0.5, axis='t
     x2, y2 = get_rmu0_2D(event2, axis)
 
     # Draw the line
-    ax.plot([x1, x2], [y1, y2], color=color, alpha=alpha, lw=0.5)
+    ax.plot([x1, x2], [y1, y2], color=color, alpha=alpha, lw=lw, **kwargs)
 
 class Frame_3D:
     def __init__(self, figsize:tuple=(6,6), title:str='', show_title:bool=True):
@@ -364,6 +364,36 @@ class Coordinate_system_Lorentz_2D:
 
         for i in range(0,len(grid),2):
             plot_line_between_2_events(self.ax, grid[i], grid[i+1], color='k', alpha=alpha, axis=self.axis)
+
+    def plot_event(self, event, *args, axis="xt", **kwargs):
+        """ 
+        Plot an event in the frame.
+        @param event: Event to be plotted.
+        @param kwargs: Keyword arguments for the plot.
+        """
+        # Transform the event to the new frame
+        event = Lorentz_transformation(rmu0=event, v0=self.velocity)
+
+        # Get the coordinates of the event in the new frame
+        event_2D = get_rmu0_2D(event, axis)
+
+        # Plot the event
+        self.ax.plot(event_2D[0], event_2D[1], *args, **kwargs)
+    
+    def plot_events(self, events, *args, axis="xt", **kwargs):
+        """
+        Plot a list of events in the frame.
+        @param events: List of events to be plotted.
+        @param kwargs: Keyword arguments for the plot.
+        """
+        # Transform the events to the new frame
+        events = Lorentz_transformation_vec(rmu0s=events, v0=self.velocity)
+
+        # Get the coordinates of the events in the new frame
+        events_2D = get_rmu0_2D_vec(events, axis)
+
+        # Plot the events
+        self.ax.plot(events_2D[:, 0], events_2D[:, 1], *args, **kwargs)
 
 
     def drawn_axis(self, alpha=0.3, space_x=0.5, space_y=0.5):
