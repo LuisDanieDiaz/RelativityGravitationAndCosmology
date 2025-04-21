@@ -23,6 +23,6 @@ setup(
     python_requires=">=3.6",
     include_package_data=True,
     package_data={
-        "my_relativity": ["plots/images/**/*.png"],
+        "my_relativity": ["plots/images/**/*.png", "fonts/*.ttf"],
     },
 )

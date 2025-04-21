@@ -5,6 +5,7 @@ from scipy.ndimage import rotate
 from .frames import get_r0_2D, get_r0_2D_vec
 from ..newton import *
 from . import images
+from .. import fonts
 from scipy.ndimage import zoom as zoom_
 from matplotlib.patches import Wedge
 from matplotlib import font_manager
@@ -208,7 +209,8 @@ class Clock:
         self.r0 = np.array(r0)
 
         titan_path = "TitanOne-Regular.ttf"  # ruta al archivo .ttf
-        self.titan_font = font_manager.FontProperties(fname=titan_path)
+        font_path = resources.files(fonts).joinpath(titan_path)
+        self.titan_font = font_manager.FontProperties(fname=font_path)
 
 
     def drawn(self, S, zorder=-1, color='r', t='t', axis='xy'):
