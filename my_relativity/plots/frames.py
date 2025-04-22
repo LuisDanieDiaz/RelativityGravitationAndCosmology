@@ -49,6 +49,33 @@ def plot_line_between_2_events(ax, event1, event2, color='k', alpha=0.5, axis='t
     # Draw the line
     ax.plot([x1, x2], [y1, y2], color=color, alpha=alpha, lw=lw, **kwargs)
 
+def plot_spring(ax, x0, y0, x1, y1, k=6, amplitude=0.1, color='black', lw=2, **kwargs):
+    # Asegurarse de que k sea par
+    if k % 2 != 0:
+        k += 1
+
+    ts = np.linspace(0, 1, 4 * k + 1)  # puntos fijos que aseguran los extremos en 0
+    ys_base = np.sin(2 * np.pi * k * ts) * amplitude  # nulo en extremos
+    xs_base = ts
+
+    
+
+    # Vector dirección
+    dx = x1 - x0
+    dy = y1 - y0
+    L = np.hypot(dx, dy)
+    angle = np.arctan2(dy, dx)
+
+    # Escalar y rotar
+    xs_rot = xs_base * L
+    ys_rot = ys_base
+
+    x_final = xs_rot * np.cos(angle) - ys_rot * np.sin(angle) + x0
+    y_final = xs_rot * np.sin(angle) + ys_rot * np.cos(angle) + y0
+
+    ax.plot(x_final, y_final, color=color, lw=lw, **kwargs)
+
+
 class Frame_3D:
     def __init__(self, figsize:tuple=(6,6), title:str='', show_title:bool=True):
         """
