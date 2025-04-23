@@ -7,6 +7,7 @@ from . import images
 from ..relativity import *
 from scipy.ndimage import zoom as zoom_
 from PIL import Image
+from matplotlib.patches import Wedge
 
 def get_r0_2D(r0, axis):
     if axis == 'xy':
@@ -358,6 +359,8 @@ class Coordinate_system_Lorentz_2D:
         self.ax.add_patch(arrow_x)
         self.ax.add_patch(arrow_y)
 
+        self.show_name_axis()
+
     def drawn_grid(self, alpha=0.3, space_x=0.5, space_y=0.5):
         """
         Draw the coordinate system in the frame.
@@ -490,10 +493,69 @@ class Coordinate_system_Lorentz_2D:
         self.get_transformation()
 
         if self.show_names:
-            self.ax.text(self.rx_2D[0]*self.size*1.15, self.rx_2D[1]*self.size*1.15, self.name_axis[0], color='r', alpha=self.alpha)
-            self.ax.text(self.ry_2D[0]*self.size*1.15, self.ry_2D[1]*self.size*1.15, self.name_axis[1], color='b', alpha=self.alpha)
+            posx = self.rx_2D[0]*self.size*1.15, self.rx_2D[1]*self.size*1.15
+            posy = self.ry_2D[0]*self.size*1.15, self.ry_2D[1]*self.size*1.15
+            if posx[0] > self.ax.xlims[0] and posx[0] < self.ax.xlims[1]:
+                self.ax.text(*posx, self.name_axis[0], color='r', alpha=self.alpha)
+            if posy[0] > self.ax.ylims[0] and posy[0] < self.ax.ylims[1]:
+                self.ax.text(*posy, self.name_axis[1], color='b', alpha=self.alpha)
 
-        
+    def drawn_angle(self, sign=1, r=0.4, color='r', alpha=0.5, color_secondary='b', plot_secondary=False, angle_name=r"$\beta$", show_angle_name=True, show_angle_name_secondary=False):
+        """
+        Draw the angle between the two axes in the frame.
+        """
+        speed = np.linalg.norm(self.velocity)
+        beta = np.arctan(speed)
+
+        index_1 = int((sign + 1)/2)
+        index_2 = int((sign - 1)/2)
+
+        thetas = np.array([0, beta*180/np.pi])
+        thetas = thetas[::sign]*sign
+        wedge = Wedge(
+            center=self.origin_transform,
+            r=r,
+            theta1=thetas[0],
+            theta2=thetas[1],
+            color=color,
+            alpha=alpha,
+            lw=0.5,
+        )
+        self.ax.add_patch(wedge)
+        if show_angle_name:
+            self.ax.text(self.origin_transform[0] + r*1.5*np.cos(np.deg2rad(thetas[index_1]/2)), 
+                         self.origin_transform[0] + r*1.5*np.sin(np.deg2rad(thetas[index_1]/2)), 
+                         angle_name, 
+                         color=color, 
+                         alpha=alpha, 
+                         fontsize=16, 
+                         ha='center', 
+                         va='center')
+
+        if plot_secondary:
+            thetas = np.array([beta*180/np.pi, 0])
+            thetas = thetas[::sign]
+            thetas[0] = 90 - sign*thetas[0]
+            thetas[1] = 90 - sign*thetas[1] 
+            wedge = Wedge(
+                center=self.origin_transform,
+                r=r,
+                theta1=thetas[0],
+                theta2=thetas[1],
+                color=color_secondary,
+                alpha=alpha,
+                lw=0.5,
+            )
+            self.ax.add_patch(wedge)
+            if show_angle_name_secondary:
+                self.ax.text(self.origin_transform[0] + r*1.5*np.cos(np.deg2rad((thetas[index_2]-90)/2 + 90)), 
+                             self.origin_transform[0] + r*1.5*np.sin(np.deg2rad((thetas[index_2]-90)/2 + 90)), 
+                             angle_name, 
+                             color=color_secondary, 
+                             alpha=alpha, 
+                             fontsize=16, 
+                             ha='center', 
+                             va='center')
 
 
 class Axis_2D(plt.Axes):
