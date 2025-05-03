@@ -6,7 +6,7 @@ with open("requirements.txt") as f:
 
 setup(
     name="my_relativity",
-    version="0.1.0",
+    version="0.1.1",
     author="Luis Daniel Díaz",
     author_email="lldddv@gmail.com",
     description="Este paquete proporciona funciones de apoyo para crear gráficas y simulaciones básicas de relatividad.",
