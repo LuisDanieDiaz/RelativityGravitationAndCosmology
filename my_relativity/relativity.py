@@ -89,6 +89,7 @@ def get_rmu0_3D_vec(rmu0, axis="txy"):
 def Lorentz_transformation(rmu0=np.array([0, 0, 0, 0]), v0=np.array([0, 0, 0])):
     """
     Perform Lorentz transformation on a 4-vector rmu0 with velocity v0.
+    Take from: TH. Transformaciones de Herglotz - Problem set 
     @param rmu0: 4-vector.
     @param v0: Velocity vector.
     @return: Transformed 4-vector.

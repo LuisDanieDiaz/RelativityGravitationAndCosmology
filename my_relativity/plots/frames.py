@@ -393,12 +393,14 @@ class Coordinate_system_Lorentz_2D:
         grid = Lorentz_transformation_vec(rmu0s=grid, v0=self.velocity)
 
         for i in range(0,len(grid),2):
-            plot_line_between_2_events(self.ax, grid[i], grid[i+1], color='k', alpha=alpha, axis=self.axis)
+            plot_line_between_2_events(self.ax, grid[i], grid[i+1], alpha=alpha, axis=self.axis)
 
-    def plot_event(self, event, *args, axis="xt", **kwargs):
+    def plot_event(self, event, *args, axis="xt", line_color='k',plot_projection=False, **kwargs):
         """ 
         Plot an event in the frame.
         @param event: Event to be plotted.
+        @param args: Arguments for the plot.
+        @param axis: Axis to plot on.
         @param kwargs: Keyword arguments for the plot.
         """
         # Transform the event to the new frame
@@ -408,7 +410,14 @@ class Coordinate_system_Lorentz_2D:
         event_2D = get_rmu0_2D(event, axis)
 
         # Plot the event
-        self.ax.plot(event_2D[0], event_2D[1], *args, **kwargs)
+        self.ax.plot(event_2D[0], event_2D[1], marker='o', *args, **kwargs)
+
+
+        if plot_projection:
+            
+            self.ax.plot([event_2D[0], event_2D[0]], [0, event_2D[1]], '--', color=line_color, zorder=-3, alpha=0.5)
+            self.ax.plot([0, event_2D[0]], [event_2D[1], event_2D[1]], '--', color=line_color, zorder=-3, alpha=0.5)
+            
     
     def plot_events(self, events, *args, axis="xt", **kwargs):
         """
@@ -505,6 +514,8 @@ class Coordinate_system_Lorentz_2D:
         Draw the angle between the two axes in the frame.
         """
         speed = np.linalg.norm(self.velocity)
+        if speed == 0:
+            return 0
         beta = np.arctan(speed)
 
         index_1 = int((sign + 1)/2)

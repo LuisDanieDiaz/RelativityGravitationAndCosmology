@@ -11,7 +11,7 @@ from matplotlib.patches import Wedge
 from matplotlib import font_manager
 
 class Image_2D:
-    def __init__(self, image_path:str, r0=[0,0], zoom=0.1, alpha=1, axis='xy', angle=0, origin='cc'):
+    def __init__(self, image_path:str, r0=[0,0], zoom=0.1, alpha=1, axis='xy', angle=0, origin='cc', reflex=False):
         """
         Create a 2D image.
         @param image_path: Path of the image.
@@ -27,6 +27,13 @@ class Image_2D:
         self.origin = origin
 
         self.img = matplotlib.image.imread(self.image_path)
+        if reflex == 'x':
+            self.img = np.flip(self.img, axis=1)
+        elif reflex == 'y':
+            self.img = np.flip(self.img, axis=0)
+        elif reflex == 'xy' or reflex == 'yx':
+            self.img = np.flip(self.img, axis=(0, 1))
+        
         if angle != 0:
             self.rotate_image(angle)
 
@@ -48,6 +55,13 @@ class Image_2D:
         self.img = rotate(self.img, angle, reshape=True)
         self.angle = angle
 
+    def zoom_(self, zoom):
+        """
+        Zoom the image by a given factor.
+        @param zoom: Zoom factor.
+        """
+        self.img = zoom_(self.img, (zoom, zoom, 1))
+        self.zoom = 0.5
 
     def drawn(self, frame, zorder=-1, angle=0):
         """
@@ -117,7 +131,7 @@ class Image_2D:
 
 
 class Body_2D(Particle, Image_2D):
-    def __init__(self, image_path:str, mass=1, r0=[0,0,0], v0=[0,0,0], zoom=0.1, alpha=1, axis='xy', angle=0, origin='cc'):
+    def __init__(self, image_path:str, mass=1, r0=[0,0,0], v0=[0,0,0], zoom=0.1, alpha=1, axis='xy', angle=0, origin='cc', reflex=False):
         """
         Create a body with a mass, position and velocity.
         @param mass: Mass of the body.
@@ -129,7 +143,7 @@ class Body_2D(Particle, Image_2D):
         """
             
         Particle.__init__(self, mass=mass, r0=r0, v0=v0)
-        Image_2D.__init__(self, image_path=image_path, r0=r0, zoom=zoom, alpha=alpha, axis=axis, angle=angle, origin=origin)
+        Image_2D.__init__(self, image_path=image_path, r0=r0, zoom=zoom, alpha=alpha, axis=axis, angle=angle, origin=origin, reflex=reflex)
 
         self.times = np.zeros(0)
         self.rs = np.zeros((0, 3))
@@ -236,3 +250,95 @@ class Clock:
         r0_2D_text = get_r0_2D(r0_text, axis)
 
         S.ax.text(*r0_2D_text, f"{t} = {self.time:.2f} {self.units[0]}", fontsize=14 * self.zoom_text/0.2, fontproperties=self.titan_font, ha='center', va='center', color=(1,1,1,0.8), zorder=5 + zorder, family='monospace')
+
+
+class Break_Point:
+    def __init__(self, img_index=0, time=0, r0=[0,0,0], zoom=None, alpha=None, zorder=5):
+        """
+        Create a break point with the time and position.
+        @param time: Time of the break point.
+        @param r0: Position of the break point.
+        """
+        self.img_index = img_index
+        self.time = time
+        self.r0 = np.array(r0)
+        self.zoom = zoom
+        self.alpha = alpha
+        self.zorder = zorder
+    
+    def drawn(self, S, animation):
+        """
+        Draw the break point in the animation.
+        @param animation: Animation object where the break point will be drawn.
+        """
+        image = animation.images[self.img_index]
+        if self.alpha != None: image.alpha = self.alpha
+        if self.zoom != None: image.zoom_(self.zoom)
+        image.drawn(S, zorder=self.zorder)
+        
+        
+
+class Animation:
+    def __init__(self, *images_names, time=0, zoom=0.15, alpha=1):
+        """
+        Create an animation with the images.
+        """
+        self.index = 0
+        self.time = time
+        self.break_points = [Break_Point()]
+        preload = Preloaded_Images()
+        self.images = [ 
+            preload.get_image(name, zoom=zoom, alpha=alpha) for name in images_names 
+            ]
+        self.break_point = self.break_points[0]
+        
+
+    def set_break_point(self, img_index=0, time=0, r0=[None], zoom=None, alpha=None):
+        """
+        Set the break points for the animation.
+        """
+        if self.break_point.time >= time:
+            raise ValueError(f"The time of the break point must be greater than the previous one. t={time}")
+        break_point = Break_Point(img_index=img_index, time=time, r0=r0, zoom=zoom, alpha=alpha)
+        self.break_points.append(break_point)
+    
+    def set_break_points(self, n, img_index:list, times:list, r0s=[None], zoom=[None], alpha=[None]):
+        r0s = [None] * n if r0s == [None] else r0s
+        zoom = [None] * n if zoom == [None] else zoom
+        alpha = [None] * n if alpha == [None] else alpha
+
+        if len(img_index) != n:
+            raise ValueError("The number of the image must be equal to the number of break points. ")
+        if len(times) != n:
+            raise ValueError("The number of the time must be equal to the number of break points.")
+        if len(r0s) != n:
+            raise ValueError("The number of the r0 must be equal to the number of break points.")
+        if len(zoom) != n:
+            raise ValueError("The number of the zoom must be equal to the number of break points.")
+        if len(alpha) != n :
+            raise ValueError("The number of the alpha must be equal to the number of break points.")
+        
+        for i in range(n):
+            self.set_break_point(img_index[i], times[i], r0s[i], zoom[i], alpha[i])
+
+    def drawn(self, S):
+        """
+        Draw the animation in the frame.
+        @param S: Frame_2D object where the animation will be drawn.
+        @param zorder: Z-order of the image.
+        @param angle: Angle in degrees.
+        """
+        next_break_point = self.break_points[self.index + 1] if self.index + 1 < len(self.break_points) else None
+        
+        if next_break_point is not None and self.time >= next_break_point.time:
+            self.break_point = next_break_point
+            self.index += 1
+        self.break_point.drawn(S, self)
+    
+    def restart(self):
+        """
+        Restart the animation.
+        """
+        self.index = 0
+        self.break_point = self.break_points[0]
+        self.time = 0
